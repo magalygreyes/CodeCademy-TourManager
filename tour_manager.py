@@ -1,0 +1,16 @@
+import os
+from dotenv import load_dotenv
+from anthropic import Anthropic
+
+load_dotenv()              # read the secrets from your .env file
+client = Anthropic()       # this auto-finds your ANTHROPIC_API_KEY
+
+response = client.messages.create(
+    model="claude-sonnet-4-6",
+    max_tokens=300,
+    messages=[
+        {"role": "user", "content": "In one sentence, introduce yourself as a tour manager assistant for a touring band."}
+    ],
+)
+
+print(response.content[0].text)
