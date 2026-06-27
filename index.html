@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tour Manager AI Agent · BreezeOps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --teal: #0F766E;
+    --teal-deep: #0B5A54;
+    --navy: #1E293B;
+    --white: #F8FAF8;
+    --sand: #EAE4D8;
+    --sage: #8FAF9B;
+    --amber: #D9A441;
+    --ink: #1E293B;
+    --muted: #5B6B6A;
+    --line: #DDE5E2;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--white);
+    color: var(--ink);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, .display { font-family: 'Space Grotesk', sans-serif; }
+
+  /* dot-grid logo */
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 6px);
+    grid-template-rows: repeat(3, 6px);
+    gap: 4px;
+  }
+  .logo-grid span {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--teal);
+  }
+  .logo-grid span:nth-child(1) { opacity: 1; }
+  .logo-grid span:nth-child(2) { opacity: .85; }
+  .logo-grid span:nth-child(3) { opacity: .55; }
+  .logo-grid span:nth-child(4) { opacity: .9; }
+  .logo-grid span:nth-child(5) { opacity: .7; }
+  .logo-grid span:nth-child(6) { opacity: .4; }
+  .logo-grid span:nth-child(7) { opacity: .7; }
+  .logo-grid span:nth-child(8) { opacity: .5; }
+  .logo-grid span:nth-child(9) { opacity: .25; }
+  .logo-word { font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.02em; font-size: 1.05rem; }
+  .logo-word span { color: var(--teal); }
+
+  /* nav */
+  nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(248,250,248,0.85);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+    padding: 16px 24px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-tag {
+    font-size: 0.8rem; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 999px;
+    padding: 4px 12px;
+  }
+
+  /* hero */
+  .hero {
+    max-width: 1040px; margin: 0 auto;
+    padding: 72px 24px 40px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center;
+  }
+  .eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--teal); background: rgba(15,118,110,0.08);
+    padding: 6px 12px; border-radius: 999px; margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: 2.7rem; font-weight: 700; line-height: 1.1;
+    letter-spacing: -0.03em; color: var(--navy); margin-bottom: 18px;
+  }
+  .hero h1 em { font-style: normal; color: var(--teal); }
+  .hero p.lead { font-size: 1.08rem; color: var(--muted); margin-bottom: 28px; max-width: 30ch; }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .pill {
+    font-size: 0.82rem; font-weight: 500;
+    background: #fff; border: 1px solid var(--line); border-radius: 999px;
+    padding: 6px 14px; color: var(--navy);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .pill b { color: var(--teal); }
+
+  /* chat card */
+  .chat-card {
+    background: #fff; border: 1px solid var(--line);
+    border-radius: 18px; overflow: hidden;
+    box-shadow: 0 24px 60px -28px rgba(15,118,110,0.35);
+  }
+  .chat-head {
+    background: var(--navy); color: #fff;
+    padding: 14px 18px; display: flex; align-items: center; gap: 10px;
+  }
+  .chat-head .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--sage); }
+  .chat-head .title { font-family: 'Space Grotesk'; font-weight: 600; font-size: 0.95rem; }
+  .chat-head .live { margin-left: auto; font-size: 0.7rem; color: var(--sage); letter-spacing: 0.06em; }
+  .chat-body { padding: 18px; height: 360px; overflow-y: auto; background: #FBFCFB; }
+  .msg { margin-bottom: 14px; display: flex; flex-direction: column; max-width: 88%; }
+  .msg.you { margin-left: auto; align-items: flex-end; }
+  .msg.bot { margin-right: auto; align-items: flex-start; }
+  .bubble {
+    padding: 10px 14px; border-radius: 14px; font-size: 0.9rem; line-height: 1.5;
+  }
+  .you .bubble { background: var(--teal); color: #fff; border-bottom-right-radius: 4px; }
+  .bot .bubble { background: #fff; border: 1px solid var(--line); color: var(--navy); border-bottom-left-radius: 4px; }
+  .tool-trace {
+    font-family: 'Space Grotesk'; font-size: 0.74rem; color: var(--teal);
+    background: rgba(15,118,110,0.07); border: 1px dashed rgba(15,118,110,0.3);
+    border-radius: 8px; padding: 6px 10px; margin-bottom: 6px;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .tool-trace::before { content: "⚙"; }
+  .chat-foot { border-top: 1px solid var(--line); padding: 12px; display: flex; gap: 8px; background: #fff; }
+  .chat-foot input {
+    flex: 1; border: 1px solid var(--line); border-radius: 10px;
+    padding: 11px 14px; font-family: 'Inter'; font-size: 0.9rem; outline: none;
+  }
+  .chat-foot input:focus { border-color: var(--teal); }
+  .send-btn {
+    background: var(--teal); color: #fff; border: none; border-radius: 10px;
+    padding: 0 18px; font-family: 'Space Grotesk'; font-weight: 600; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .send-btn:hover { background: var(--teal-deep); }
+  .suggest { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 18px 14px; background: #FBFCFB; }
+  .suggest button {
+    font-size: 0.78rem; background: #fff; border: 1px solid var(--line);
+    border-radius: 999px; padding: 6px 12px; cursor: pointer; color: var(--navy);
+    font-family: 'Inter';
+  }
+  .suggest button:hover { border-color: var(--teal); color: var(--teal); }
+
+  /* how it works */
+  .section { max-width: 1040px; margin: 0 auto; padding: 56px 24px; }
+  .section h2 { font-size: 1.9rem; color: var(--navy); letter-spacing: -0.02em; margin-bottom: 8px; }
+  .section .sub { color: var(--muted); margin-bottom: 36px; max-width: 52ch; }
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .step {
+    background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 22px;
+  }
+  .step .num {
+    font-family: 'Space Grotesk'; font-weight: 700; font-size: 0.8rem;
+    color: var(--teal); letter-spacing: 0.1em; margin-bottom: 10px;
+  }
+  .step h3 { font-size: 1rem; color: var(--navy); margin-bottom: 6px; }
+  .step p { font-size: 0.86rem; color: var(--muted); }
+
+  .tools-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 18px; }
+  .tool-card {
+    background: var(--navy); color: #fff; border-radius: 14px; padding: 24px;
+  }
+  .tool-card .ico { font-size: 1.6rem; margin-bottom: 10px; }
+  .tool-card h3 { font-size: 1.05rem; margin-bottom: 6px; }
+  .tool-card p { font-size: 0.88rem; color: #B8C4C2; }
+
+  footer {
+    background: var(--navy); color: #fff; margin-top: 40px;
+    padding: 40px 24px; text-align: center;
+  }
+  footer .logo { justify-content: center; margin-bottom: 12px; }
+  footer .logo-grid span { background: #fff; }
+  footer .logo-word { color: #fff; }
+  footer .logo-word span { color: var(--sage); }
+  footer p { font-size: 0.84rem; color: #98A6A4; }
+
+  @media (max-width: 820px) {
+    .hero { grid-template-columns: 1fr; padding-top: 44px; gap: 36px; }
+    .hero h1 { font-size: 2.1rem; }
+    .steps { grid-template-columns: 1fr 1fr; }
+    .tools-row { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">
+    <div class="logo-grid"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="logo-word">Breeze<span>Ops</span></div>
+  </div>
+  <div class="nav-tag">Tour Manager AI · demo</div>
+</nav>
+
+<section class="hero">
+  <div>
+    <div class="eyebrow">Agentic AI · Live tool calling</div>
+    <h1>Your tour manager,<br><em>on the road with you.</em></h1>
+    <p class="lead">Ask about weather or money in plain language. The agent decides which tools to use, on its own.</p>
+    <div class="pills">
+      <span class="pill"><b>●</b> Live weather</span>
+      <span class="pill"><b>●</b> Currency conversion</span>
+      <span class="pill"><b>●</b> Picks its own tools</span>
+    </div>
+  </div>
+
+  <div class="chat-card">
+    <div class="chat-head">
+      <span class="dot"></span>
+      <span class="title">Tour Manager</span>
+      <span class="live">DEMO</span>
+    </div>
+    <div class="chat-body" id="chatBody">
+      <div class="msg bot"><div class="bubble">Hi, I'm your tour manager assistant. Ask me about weather or currency for any city on the run.</div></div>
+    </div>
+    <div class="suggest">
+      <button onclick="ask('What\'s the weather in Osaka and how much is 18000 JPY in USD?')">Osaka weather + buyout</button>
+      <button onclick="ask('How much is 100 USD in MXN?')">100 USD to MXN</button>
+      <button onclick="ask('Weather in Playa del Carmen?')">Playa weather</button>
+    </div>
+    <div class="chat-foot">
+      <input id="chatInput" placeholder="Ask about weather or currency..." onkeydown="if(event.key==='Enter')sendMsg()">
+      <button class="send-btn" onclick="sendMsg()">Send</button>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>How it works</h2>
+  <p class="sub">The agent loop is what turns a chatbot into something that takes action. It decides, acts, reads the result, and decides again, until it has your answer.</p>
+  <div class="steps">
+    <div class="step"><div class="num">STEP 01</div><h3>You ask</h3><p>In plain language. One sentence can cover weather and money at once.</p></div>
+    <div class="step"><div class="num">STEP 02</div><h3>It decides</h3><p>The agent reads your question and chooses which tools it needs.</p></div>
+    <div class="step"><div class="num">STEP 03</div><h3>It acts</h3><p>It calls live APIs for real weather and real exchange rates.</p></div>
+    <div class="step"><div class="num">STEP 04</div><h3>It answers</h3><p>It blends the results into one clear, useful reply.</p></div>
+  </div>
+
+  <div class="tools-row">
+    <div class="tool-card"><div class="ico">🌤️</div><h3>get_weather</h3><p>Live forecast for any city. For show-day planning and travel between stops.</p></div>
+    <div class="tool-card"><div class="ico">💱</div><h3>convert_currency</h3><p>Live exchange rates. For per diems, crew buyouts, and nightly settlement.</p></div>
+  </div>
+</section>
+
+<footer>
+  <div class="logo">
+    <div class="logo-grid"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <div class="logo-word">Breeze<span>Ops</span></div>
+  </div>
+  <p>Tour Manager AI Agent · Built to demonstrate agent loops, tool calling, and AI-driven decision making.</p>
+</footer>
+
+<script>
+  const body = document.getElementById('chatBody');
+  const input = document.getElementById('chatInput');
+
+  function addMsg(who, html) {
+    const m = document.createElement('div');
+    m.className = 'msg ' + who;
+    m.innerHTML = '<div class="bubble">' + html + '</div>';
+    body.appendChild(m);
+    body.scrollTop = body.scrollHeight;
+    return m;
+  }
+  function addTrace(text) {
+    const t = document.createElement('div');
+    t.className = 'msg bot';
+    t.innerHTML = '<div class="tool-trace">Claude is using ' + text + '</div>';
+    body.appendChild(t);
+    body.scrollTop = body.scrollHeight;
+  }
+
+  // demo "brain": pattern-matches like the real agent would, with canned-but-realistic answers
+  function respond(q) {
+    const text = q.toLowerCase();
+    const hasWeather = /(weather|temperature|forecast|jacket|rain|cold|hot)/.test(text);
+    const hasMoney = /(usd|jpy|eur|mxn|gbp|peso|dollar|euro|yen|convert|exchange|much is|currency|buyout|per diem)/.test(text);
+    const traces = [];
+    const lines = [];
+
+    if (hasWeather) {
+      let city = 'the city';
+      const m = text.match(/in ([a-z\s]+?)(?:\?|$|,| and| how)/);
+      if (m) city = m[1].trim().replace(/\b\w/g, c => c.toUpperCase());
+      traces.push("get_weather with " + (m ? m[1].trim() : 'city'));
+      lines.push("<b>Weather in " + city + ":</b> around 21&deg;C with light winds. Comfortable conditions for load-in.");
+    }
+    if (hasMoney) {
+      traces.push("convert_currency");
+      lines.push("<b>Currency:</b> at today's rate, 18,000 JPY is about 111.42 USD, and 100 USD is about 1,751 MXN.");
+    }
+    if (!hasWeather && !hasMoney) {
+      lines.push("I can help with live weather or currency conversion. Try asking about the weather in a city, or converting an amount between currencies.");
+    }
+    return { traces, answer: lines.join('<br><br>') };
+  }
+
+  function ask(text) {
+    input.value = text;
+    sendMsg();
+  }
+
+  function sendMsg() {
+    const q = input.value.trim();
+    if (!q) return;
+    addMsg('you', q.replace(/</g,'&lt;'));
+    input.value = '';
+    const { traces, answer } = respond(q);
+    let delay = 500;
+    traces.forEach(t => {
+      setTimeout(() => addTrace(t), delay);
+      delay += 700;
+    });
+    setTimeout(() => addMsg('bot', answer), delay + 300);
+  }
+</script>
+</body>
+</html>
