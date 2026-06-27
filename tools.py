@@ -1,14 +1,15 @@
 import requests
 
-def get_weather(city: str):
-    """Look up current weather for a city using the free Open-Meteo API."""
 
-    # Step 1: turn a city name into map coordinates
-    geo_url = "https://geocoding-api.open-meteo.com/v1/search"
-    geo = requests.get(geo_url, params={"name": city, "count": 1}).json()
+def get_weather(city):
+    """Look up current weather for a city using the free Open-Meteo API."""
+    geo = requests.get(
+        "https://geocoding-api.open-meteo.com/v1/search",
+        params={"name": city, "count": 1},
+    ).json()
 
     if not geo.get("results"):
-        return f"Sorry, I couldn't find a city called {city}."
+        return "Sorry, I could not find a city called " + city
 
     place = geo["results"][0]
     lat = place["latitude"]
@@ -16,21 +17,39 @@ def get_weather(city: str):
     name = place["name"]
     country = place.get("country", "")
 
-    # Step 2: use those coordinates to get the weather
-    weather_url = "https://api.open-meteo.com/v1/forecast"
-    weather = requests.get(weather_url, params={
-        "latitude": lat,
-        "longitude": lon,
-        "current": "temperature_2m,wind_speed_10m",
-    }).json()
+    weather = requests.get(
+        "https://api.open-meteo.com/v1/forecast",
+        params={
+            "latitude": lat,
+            "longitude": lon,
+            "current": "temperature_2m,wind_speed_10m",
+        },
+    ).json()
 
     current = weather["current"]
     temp = current["temperature_2m"]
     wind = current["wind_speed_10m"]
 
-    return f"{name}, {country}: {temp}°C, wind {wind} km/h."
+    return name + ", " + country + ": " + str(temp) + " C, wind " + str(wind) + " km/h."
 
 
-# A quick self-test so we can run this file on its own
+def convert_currency(amount, from_currency, to_currency):
+    """Convert money from one currency to another using the free Frankfurter API."""
+    data = requests.get(
+        "https://api.frankfurter.dev/v1/latest",
+        params={"base": from_currency.upper(), "symbols": to_currency.upper()},
+    ).json()
+
+    rates = data.get("rates", {})
+    target = to_currency.upper()
+
+    if target not in rates:
+        return "Sorry, I could not convert " + from_currency + " to " + to_currency
+
+    converted = amount * rates[target]
+    return str(amount) + " " + from_currency.upper() + " = " + format(converted, ".2f") + " " + target
+
+
 if __name__ == "__main__":
     print(get_weather("Osaka"))
+    print(convert_currency(18000, "JPY", "USD"))
