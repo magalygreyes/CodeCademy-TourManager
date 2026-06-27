@@ -4,6 +4,7 @@ A conversational AI assistant that helps a touring tour manager run a show day. 
 
 Built to demonstrate the core of agentic AI: an agent that reasons, makes decisions, and takes action, not just a chatbot that talks.
 
+Try it out : more add ins comming soon https://fictional-space-enigma-9jj496jp5h79p6-5000.app.github.dev/
 ---
 
 ## What it does
