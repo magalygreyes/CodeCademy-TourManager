@@ -38,8 +38,7 @@ TOOL_FUNCTIONS = {
 }
 
 
-def run_agent(user_message):
-    messages = [{"role": "user", "content": user_message}]
+def run_agent(messages):
     while True:
         response = client.messages.create(
             model="claude-sonnet-4-6",
@@ -48,12 +47,14 @@ def run_agent(user_message):
             messages=messages,
         )
         if response.stop_reason != "tool_use":
-            return "".join(b.text for b in response.content if b.type == "text")
+            messages.append({"role": "assistant", "content": response.content})
+            answer = "".join(b.text for b in response.content if b.type == "text")
+            return messages, answer
         messages.append({"role": "assistant", "content": response.content})
         tool_results = []
         for block in response.content:
             if block.type == "tool_use":
-                print("   [Claude decided to call " + block.name + " with " + str(block.input) + "]")
+                print("   [Claude is using " + block.name + " with " + str(block.input) + "]")
                 result = TOOL_FUNCTIONS[block.name](**block.input)
                 tool_results.append({
                     "type": "tool_result",
@@ -64,7 +65,16 @@ def run_agent(user_message):
 
 
 if __name__ == "__main__":
-    question = "We're in Osaka for load-in. What's the weather, and how much is the 18000 JPY catering buyout in USD?"
-    print("You: " + question + "\n")
-    answer = run_agent(question)
-    print("\nTour Manager: " + answer)
+    print("Tour Manager Assistant. Ask me about weather or currency.")
+    print("Type 'quit' to exit.\n")
+    messages = []
+    while True:
+        user_input = input("You: ")
+        if user_input.lower().strip() in ("quit", "exit", "q"):
+            print("\nSafe travels! See you at the next stop.")
+            break
+        if not user_input.strip():
+            continue
+        messages.append({"role": "user", "content": user_input})
+        messages, answer = run_agent(messages)
+        print("\nTour Manager: " + answer + "\n")
