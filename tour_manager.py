@@ -1,12 +1,10 @@
 from dotenv import load_dotenv
 from anthropic import Anthropic
-
-from tools import get_weather   # reuse the tool you already tested
+from tools import get_weather, convert_currency
 
 load_dotenv()
 client = Anthropic()
 
-# 1. TELL Claude what tools exist. This is a description, not the code.
 tools = [
     {
         "name": "get_weather",
@@ -14,65 +12,59 @@ tools = [
         "input_schema": {
             "type": "object",
             "properties": {
-                "city": {
-                    "type": "string",
-                    "description": "The city name, e.g. 'Osaka' or 'Berlin'.",
-                }
+                "city": {"type": "string", "description": "The city name, e.g. Osaka or Berlin."}
             },
             "required": ["city"],
         },
-    }
+    },
+    {
+        "name": "convert_currency",
+        "description": "Convert money from one currency to another. Use this whenever the user asks about exchange rates, converting money, per diems, or costs in another currency.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "amount": {"type": "number", "description": "The amount to convert, e.g. 18000."},
+                "from_currency": {"type": "string", "description": "3-letter code to convert from, e.g. JPY."},
+                "to_currency": {"type": "string", "description": "3-letter code to convert to, e.g. USD."},
+            },
+            "required": ["amount", "from_currency", "to_currency"],
+        },
+    },
 ]
 
-# 2. MAP each tool name to the real Python function.
 TOOL_FUNCTIONS = {
     "get_weather": get_weather,
+    "convert_currency": convert_currency,
 }
 
 
-def run_agent(user_message: str):
-    """Run the agent loop until Claude reaches a final answer."""
-
+def run_agent(user_message):
     messages = [{"role": "user", "content": user_message}]
-
     while True:
         response = client.messages.create(
             model="claude-sonnet-4-6",
-            max_tokens=500,
+            max_tokens=600,
             tools=tools,
             messages=messages,
         )
-
-        # If Claude did NOT ask for a tool, it's done. Return the answer.
         if response.stop_reason != "tool_use":
-            return "".join(
-                block.text for block in response.content if block.type == "text"
-            )
-
-        # Claude wants a tool. Save its request into the conversation.
+            return "".join(b.text for b in response.content if b.type == "text")
         messages.append({"role": "assistant", "content": response.content})
-
-        # Run every tool Claude asked for, collect the results.
         tool_results = []
         for block in response.content:
             if block.type == "tool_use":
-                print(f"   [Claude decided to call {block.name} with {block.input}]")
-
-                function = TOOL_FUNCTIONS[block.name]
-                result = function(**block.input)
-
+                print("   [Claude decided to call " + block.name + " with " + str(block.input) + "]")
+                result = TOOL_FUNCTIONS[block.name](**block.input)
                 tool_results.append({
                     "type": "tool_result",
                     "tool_use_id": block.id,
                     "content": str(result),
                 })
-
-        # Hand the results back to Claude, then loop again.
         messages.append({"role": "user", "content": tool_results})
 
 
 if __name__ == "__main__":
-    question = "What's the weather in Osaka right now? Should the crew pack a jacket for load-in?"
-    print(f"You: {question}\n")
+    question = "We're in Osaka for load-in. What's the weather, and how much is the 18000 JPY catering buyout in USD?"
+    print("You: " + question + "\n")
     answer = run_agent(question)
-    print(f"\nTour Manager: {answer}")
+    print("\nTour Manager: " + answer)
